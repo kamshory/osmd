@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="js/soundfont-player.js"></script>
+    <script src="js/PlaybackEngine.js"></script>
+    <script src="js/PlaybackScheduler.js"></script>
+    <script src="js/StepQueue.js"></script>
+
+    <script src="js/opensheetmusicdisplay.min.js"></script> <!-- you need to provide the .js file, see README.md-->
+
+    <script src="js/fileSelectAndLoadOSMD.js"></script>
+
+
+    
+    <script>
+    </script>
+</head>
+<body>
+    <div id="osmdCanvas"/>
+    <input type="file" id="files"/>
+    <output id="list"></output>
+
+</body>
+<script>
+    document.onclick = function()
+    {
+    }
+    window.onload = function()
+    {
+        document.getElementById("files").addEventListener("change", handleFileSelect, false);
+    }
+</script>
+</html>
