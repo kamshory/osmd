@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>XMLMusic Player</title>
     <script src="js/soundfont-player.js"></script>
     <script src="js/PlaybackEngine.js"></script>
     <script src="js/PlaybackScheduler.js"></script>
     <script src="js/StepQueue.js"></script>
-
     <script src="js/opensheetmusicdisplay.min.js"></script> <!-- you need to provide the .js file, see README.md-->
-
     <script src="js/fileSelectAndLoadOSMD.js"></script>
-
-
-    
     <script>
     </script>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+    </style>
 </head>
 <body>
-    <div id="osmdCanvas"/>
-    <input type="file" id="files"/>
-    <output id="list"></output>
-
+    <div id="fileloader">
+        <input type="file" id="files"/>
+        <output id="list"></output>
+    </div>
+    <div id="osmdCanvas"></div>
+    
 </body>
 <script>
     document.onclick = function()

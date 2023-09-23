@@ -51,15 +51,22 @@ class PlaybackScheduler {
   }
 
   start() {
+    window.scroll({top:140});
     this.playing = true;
     this.stepQueue.sort();
+    console.log('scrool 140');
+    window.scroll({top:140});
     console.log('AudioContext time: ', this.audioContextTime);
     console.log('Tick duration: ', this.tickDuration);
+    console.log('scrool 140');
+    window.scroll({top:140});
     this._audioContextStartTime = this.audioContext.currentTime;
     this.currentTickTimestamp = this.audioContextTime;
     if (!this._schedulerInterval) {
       this._schedulerInterval = setInterval(() => this._scheduleIterationStep(), this._scheduleInterval);
     }
+    console.log('scrool 140');
+    window.scroll({top:140});
   }
 
   setIterationStep(step) {

@@ -1,6 +1,3 @@
-//import Soundfont from 'soundfont-player';
-//import PlaybackScheduler from './PlaybackScheduler';
-
 const playbackStates = {
   INIT: 'INIT',
   PLAYING: 'PLAYING',
@@ -9,7 +6,7 @@ const playbackStates = {
 };
 
 class PlaybackEngine {
-  constructor() {
+  constructor(initialScroll) {
     this.ac = new AudioContext();
     this.ac.suspend();
     this.defaultBpm = 100;
@@ -37,6 +34,23 @@ class PlaybackEngine {
     };
 
     this.state = playbackStates.INIT;
+    this.scroolTop = initialScroll || 0;
+  }
+  scrool()
+  {
+    let top = osmd.cursor.cursorElement.offsetTop;
+    let pos = top - 65;
+    if(pos < 0)
+    {
+      pos = 0;
+    }
+    document.title = [top, pos, this.scroolTop]
+    if(this.scroolTop < pos)
+    {
+      this.scroolTop = pos;
+      window.scroll({top:pos});
+      
+    }
   }
 
   get wholeNoteLength() {
@@ -44,7 +58,11 @@ class PlaybackEngine {
   }
 
   async loadInstrument(instrumentName) {
+    console.log('before load instrument');
+    this.forceScroll();
     this.playbackSettings.instrument = await Soundfont.instrument(this.ac, instrumentName);
+    console.log('after load instrument');
+    this.forceScroll();
   }
 
   loadScore(osmd) {
@@ -78,13 +96,31 @@ class PlaybackEngine {
   }
 
   async play() {
-    if (!this.playbackSettings.instrument) await this.loadInstrument('acoustic_grand_piano');
+    console.log('position 0');
+    this.forceScroll();
+    if (!this.playbackSettings.instrument) 
+    {
+      await this.loadInstrument('acoustic_grand_piano');
+    }
+    console.log('position 1');
+    this.forceScroll();
     await this.ac.resume();
-
+    console.log('position 2');
+    this.forceScroll();
     this.cursor.show();
-
+    console.log('position 3');
+    this.forceScroll();
     this.state = playbackStates.PLAYING;
     this.scheduler.start();
+    console.log('position 4');
+    this.forceScroll();
+    
+  }
+
+  forceScroll()
+  {
+    console.log(this.scroolTop)
+    window.scroll({top:this.scrollTop});
   }
 
   async stop() {
@@ -114,7 +150,6 @@ class PlaybackEngine {
 
   jumpToStep(step) {
     this.pause();
-    console.log('Jump to step ' + step);
     if (this.currentIterationStep > step) {
       this.cursor.hide();
       this.cursor.reset();
@@ -196,6 +231,7 @@ class PlaybackEngine {
     if (this.currentIterationStep > 0) 
     {
       osmd.cursor.next();
+      this.scrool();
     }
     ++this.currentIterationStep;
   }
