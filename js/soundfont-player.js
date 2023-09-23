@@ -39,18 +39,14 @@
      * })
      */
     function instrument (ac, name, options) {
-      console.log('p 1');
       if (arguments.length === 1) return function (n, o) { 
         return instrument(ac, n, o); 
       }
-      console.log('p 2');
       var opts = options || {}
       var isUrl = opts.isSoundfontURL || isSoundfontURL
       var toUrl = opts.nameToUrl || nameToUrl
       var url = isUrl(name) ? name : toUrl(name, opts.soundfont, opts.format)
-      console.log('p 3');
       return load(ac, url, { only: opts.only || opts.notes }).then(function (buffers) {
-        console.log('p 4');
         var p = player(ac, buffers, opts).connect(opts.destination ? opts.destination : ac.destination)
         p.url = url
         p.name = name

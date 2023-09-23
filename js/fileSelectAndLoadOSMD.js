@@ -41,27 +41,17 @@ function handleFileSelect(evt) {
               window.osmd = osmd; // give access to osmd object in Browser console, e.g. for osmd.setOptions()
               //console.log("e.target.result: " + e.target.result);
               osmd.render();
-              osmd.cursor.show(); // this would show the cursor on the first note
-              osmd.cursor.next(); // advance the cursor one note
-
-              let top = osmd.cursor.cursorElement.offsetTop;
-              let pos = top - 65;
+ 
               
-              pb = new PlaybackEngine(pos);
+              pb = new PlaybackEngine();
               pb.loadScore(osmd);
               pb.setBpm(osmd.sheet.DefaultStartTempoInBpm);
 
-              console.log('scrool', pos)
-              window.scroll({top:pos});
-              pb.scrool();
-              window.scroll({top:pos});
-
-              pb.scroolTop = pos;
-              window.scroll({top:pos});
-              osmd.cursor.reset();
-              window.scroll({top:pos});
-              pb.play();
-              window.scroll({top:pos});
+             
+             
+             osmd.cursor.show(); // this would show the cursor on the first note
+             pb.play();
+             pb.scroll();
               
               
             }

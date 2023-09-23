@@ -6,7 +6,7 @@ const playbackStates = {
 };
 
 class PlaybackEngine {
-  constructor(initialScroll) {
+  constructor() {
     this.ac = new AudioContext();
     this.ac.suspend();
     this.defaultBpm = 100;
@@ -34,40 +34,36 @@ class PlaybackEngine {
     };
 
     this.state = playbackStates.INIT;
-    this.scroolTop = initialScroll || 0;
-  }
-  scrool()
-  {
-    let top = osmd.cursor.cursorElement.offsetTop;
-    let pos = top - 65;
-    if(pos < 0)
+    this.scrollTop = 0;
+    this.currentScrollTop = 0;
+    this.getScrollPosition = function()
     {
-      pos = 0;
+      return window.pageYOffset || document.documentElement.scrollTop;
     }
-    document.title = [top, pos, this.scroolTop]
-    if(this.scroolTop < pos)
+    this.scroll = function()
     {
-      this.scroolTop = pos;
-      window.scroll({top:pos});
-      
+      let top = osmd.cursor.cursorElement.offsetTop;
+      let pos = top - 65;
+      if(pos < 0)
+      {
+        pos = 0;
+      }
+      if(this.getScrollPosition() != pos)
+      {
+        this.scrollTop = pos;
+        this.currentScrollTop = pos;
+        window.scroll({top:pos});     
+      }
     }
   }
+  
 
   get wholeNoteLength() {
     return Math.round((60 / this.playbackSettings.bpm) * this.denominator * 1000);
   }
 
   async loadInstrument(instrumentName) {
-    let self = this;
-    let a = setInterval(function(){
-      self.forceScroll();
-    }, 5);
-    console.log('before load instrument');
-    this.forceScroll();
     this.playbackSettings.instrument = await Soundfont.instrument(this.ac, instrumentName);
-    console.log('after load instrument');
-    this.forceScroll();
-    clearInterval(a);
   }
 
   loadScore(osmd) {
@@ -101,32 +97,19 @@ class PlaybackEngine {
   }
 
   async play() {
-    console.log('position 0');
-    this.forceScroll();
     if (!this.playbackSettings.instrument) 
     {
       await this.loadInstrument('acoustic_grand_piano');
     }
-    console.log('position 1');
-    this.forceScroll();
     await this.ac.resume();
-    console.log('position 2');
-    this.forceScroll();
-    this.cursor.show();
-    console.log('position 3');
-    this.forceScroll();
-    this.state = playbackStates.PLAYING;
+    this.scroll();
     this.scheduler.start();
-    console.log('position 4');
-    this.forceScroll();
+    this.cursor.show();
+    this.state = playbackStates.PLAYING;
+    
     
   }
 
-  forceScroll()
-  {
-    console.log(this.scroolTop)
-    window.scroll({top:this.scrollTop});
-  }
 
   async stop() {
     this.state = playbackStates.STOPPED;
@@ -236,7 +219,7 @@ class PlaybackEngine {
     if (this.currentIterationStep > 0) 
     {
       osmd.cursor.next();
-      this.scrool();
+      this.scroll();
     }
     ++this.currentIterationStep;
   }
