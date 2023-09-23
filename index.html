@@ -29,7 +29,6 @@
             width: 190px;
             margin-left: -200px;
             height: 100vh;
-            background-color: #FAFAFA;
             box-sizing: border-box;
         }
         #osmdCanvas{
@@ -39,7 +38,7 @@
             overflow-y: auto;
         }
         #instruments{
-            padding-top: 100px;
+            padding-top: 120px;
         }
         #instruments .elem-ul{
             list-style-type: none;
@@ -52,10 +51,10 @@
             padding: 0;
             max-height: 96px;
             overflow: visible;
-            position: relative;
         }
         #instruments .elem-ul .elem-li.instr{
             position: absolute;
+            transition:top ease-in-out 0.24s;
         }
         #instruments .elem-ul .elem-li .instrument-container{
             width: 160px;
@@ -64,8 +63,8 @@
             position: absolute;
             top: 0;
         }
-        #instruments .elem-ul .elem-li .instrument-container img{
-            
+        #instruments .elem-ul .elem-li img{
+            transition: all ease-in-out 0.05;         
         }
     </style>
 </head>

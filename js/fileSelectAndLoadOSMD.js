@@ -100,7 +100,7 @@ function handleFileSelect(evt) {
           drawFromMeasureNumber: 1,
           drawUpToMeasureNumber: Number.MAX_SAFE_INTEGER // draw all measures, up to the end of the sample
         });
-        osmd.zoom = 0.75; 
+        osmd.zoom = 0.6; 
         
         osmd
           .load(e.target.result)

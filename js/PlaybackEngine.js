@@ -23,6 +23,7 @@ class PlaybackEngine {
     this.currentIterationStep = 0;
 
     this.timeoutHandles = [];
+    this.animateTimeout = {};
 
     this.playbackSettings = {
       bpm: this.defaultBpm,
@@ -178,11 +179,26 @@ class PlaybackEngine {
      for(let idx = 0; idx < osmd.cursor.iterator.currentMeasure.verticalMeasureList.length - 1; idx++)
      {
       let top = osmd.cursor.iterator.currentMeasure.verticalMeasureList[idx].stave.y - osmd.cursor.cursorElement.offsetTop;
-      document.querySelector('.box-'+idx).style.top=top+'px';
+        let cls = '.box-'+idx;
+        document.querySelector(cls).style.top=top+'px';
+        
      }
-     //console.log(osmd.cursor.iterator.currentMeasure.verticalMeasureList[1].stave.y - osmd.cursor.cursorElement.offsetTop)
+     let cls2 = '.instr-'+subInstrument.idString;
+     this.animateInstr(cls2, noteDuration);
       
     }
+  }
+
+  animateInstr(cls, noteDuration)
+  {
+    if(typeof this.animateTimeout[cls] != 'undefined')
+    {
+      clearTimeout(this.animateTimeout[cls]);
+    }
+    this.animateTimeout[cls] = setTimeout(function(){
+      document.querySelector(cls+' img').style.transform = 'scale(1)';
+    }, noteDuration/5);
+    document.querySelector(cls+' img').style.transform = 'scale(1.03)';
   }
 
   setVoiceVolume(instrumentId, voiceId, volume) {
