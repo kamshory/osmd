@@ -58,11 +58,16 @@ class PlaybackEngine {
   }
 
   async loadInstrument(instrumentName) {
+    let self = this;
+    let a = setInterval(function(){
+      self.forceScroll();
+    }, 5);
     console.log('before load instrument');
     this.forceScroll();
     this.playbackSettings.instrument = await Soundfont.instrument(this.ac, instrumentName);
     console.log('after load instrument');
     this.forceScroll();
+    clearInterval(a);
   }
 
   loadScore(osmd) {
