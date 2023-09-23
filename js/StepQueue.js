@@ -8,6 +8,9 @@ class StepQueue {
     }
   
     add(stepObject, note) {
+      //console.log(stepObject);
+      //console.log(note);
+      
       let existingStep = this.steps.find(s => s.tick === stepObject.tick);
       if (existingStep) {
         stepObject = existingStep;

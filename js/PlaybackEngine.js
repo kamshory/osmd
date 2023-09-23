@@ -52,7 +52,7 @@ class PlaybackEngine {
       {
         this.scrollTop = pos;
         this.currentScrollTop = pos;
-        window.scroll({top:pos});     
+        document.querySelector('#osmdCanvas').scroll({top:pos});     
       }
     }
   }
@@ -65,6 +65,7 @@ class PlaybackEngine {
   async loadInstrument(instrumentName) {
     this.playbackSettings.instrument = await Soundfont.instrument(this.ac, instrumentName);
   }
+  
 
   loadScore(osmd) {
     this.sheet = osmd.sheet;
@@ -153,6 +154,37 @@ class PlaybackEngine {
     this.cursor.show();
   }
 
+  animate(note, noteVolume, noteDuration)
+  {
+    let parentId = note.voiceEntry.parentVoice.parent.idString;
+    let voiceId = note.voiceEntry.parentVoice.voiceId;
+    let halfTone = note.halfTone;
+    for(let subInstrument of note.voiceEntry.parentVoice.parent.subInstruments)
+    {
+      /*
+      console.log({
+        subInstrumentId:subInstrument.idString, 
+        midiInstrumentID:subInstrument.midiInstrumentID,
+        parentId:parentId, 
+        voiceId:voiceId,
+        name:subInstrument.name,
+        pan:subInstrument.subinstrument,
+        volume:subInstrument.volume,
+        halfTone:halfTone,
+        noteVolume:noteVolume,
+        noteDuration:noteDuration
+      });
+      */
+     for(let idx = 0; idx < osmd.cursor.iterator.currentMeasure.verticalMeasureList.length - 1; idx++)
+     {
+      let top = osmd.cursor.iterator.currentMeasure.verticalMeasureList[idx].stave.y - osmd.cursor.cursorElement.offsetTop;
+      document.querySelector('.box-'+idx).style.top=top+'px';
+     }
+     //console.log(osmd.cursor.iterator.currentMeasure.verticalMeasureList[1].stave.y - osmd.cursor.cursorElement.offsetTop)
+      
+    }
+  }
+
   setVoiceVolume(instrumentId, voiceId, volume) {
     let playbackInstrument = this.playbackSettings.volumes.instruments.find(i => i.id === instrumentId);
     let playbackVoice = playbackInstrument.voices.find(v => v.id === voiceId);
@@ -169,7 +201,9 @@ class PlaybackEngine {
     let steps = 0;
     while (!this.cursor.iterator.endReached) {
       if (this.cursor.iterator.currentVoiceEntries)
-        this.scheduler.loadNotes(this.cursor.iterator.currentVoiceEntries);
+        {
+          this.scheduler.loadNotes(this.cursor.iterator.currentVoiceEntries);
+        }
       this.cursor.next();
       ++steps;
     }
@@ -180,7 +214,7 @@ class PlaybackEngine {
   _notePlaybackCallback(audioDelay, notes) {
     if (this.state !== playbackStates.PLAYING) return;
     
-    
+    //console.log(notes);
     
     let scheduledNotes = [];
 
@@ -189,13 +223,14 @@ class PlaybackEngine {
       if (noteDuration === 0) continue;
       let noteVolume = this._getNoteVolume(note);
 
+      this.animate(note, noteVolume, noteDuration);
+ 
       scheduledNotes.push({
         note: note.halfTone,
         duration: noteDuration / 1000,
         gain: noteVolume
       });
     }
-
     this.playbackSettings.instrument.schedule(this.ac.currentTime + audioDelay, scheduledNotes);
 
     this.timeoutHandles.push(
