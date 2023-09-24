@@ -12,6 +12,7 @@
     <script src="js/fileSelectAndLoadOSMD.js"></script>
     <script>
     </script>
+
     <style>
         body{
             margin: 0;
@@ -20,25 +21,25 @@
         #container{
             height: 100vh;
             position: relative;
-            padding-left: 200px;
+            padding-left: 160px;
             box-sizing: border-box;
-            top: 30px;
+            display: none;
         }
         #sidebar{
             position: absolute;
-            width: 190px;
-            margin-left: -200px;
+            width: 150px;
+            margin-left: -160px;
             height: 100vh;
             box-sizing: border-box;
         }
         #osmdCanvas{
-            width: calc(100vw - 200px);
+            width: calc(100vw - 160px);
             box-sizing: border-box;
             height: 100vh;
             overflow-y: auto;
         }
         #instruments{
-            padding-top: 120px;
+            padding-top: 115px;
         }
         #instruments .elem-ul{
             list-style-type: none;
@@ -57,7 +58,7 @@
             transition:top ease-in-out 0.24s;
         }
         #instruments .elem-ul .elem-li .instrument-container{
-            width: 160px;
+            width: 150px;
             height: 72px;
             text-align: center;
             position: absolute;
@@ -66,12 +67,46 @@
         #instruments .elem-ul .elem-li img{
             transition: all ease-in-out 0.05;         
         }
+        #fileloader{
+            position: relative;
+            left: calc(50vw - 25px);
+            top: calc(50vh - 25px);
+            height: 50px;
+        }
+
+        .folder-container {
+            width: 50px;
+            height: 50px;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .folder-tab, .folder {
+        margin: 0 auto;
+        background-color: #ffb120;
+        }
+        .folder-tab {
+        width: 25px;
+        height: 5px;
+        margin-right: 50%;
+        border-radius: 5px 15px 0 0;
+        }
+        .folder {
+            width: 50px;
+            height: 35px;
+            border-radius: 0 5px 5px 5px;
+            box-shadow: 1px 1px 1px 0px #ac7816b0;
+        }
+
     </style>
 </head>
 <body>
     <div id="fileloader">
-        <input type="file" id="files"/>
-        <output id="list"></output>
+        <div id="browser" class="folder-container">
+            <div class="folder-tab"></div>
+            <div class="folder"></div>
+          </div>
+        <input type="file" id="files" style="position: absolute; left: -100000000px;"/>
     </div>
 
     <div id="container">
@@ -95,6 +130,9 @@
     window.onload = function()
     {
         document.getElementById("files").addEventListener("change", handleFileSelect, false);
+        document.getElementById("browser").addEventListener("click", function(){
+            document.getElementById("files").click();
+        }, false);
     }
 </script>
 </html>
