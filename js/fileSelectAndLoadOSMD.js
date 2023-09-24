@@ -72,7 +72,7 @@ function handleFileSelect(evt) {
   let osmdDisplays = Math.min(files.length, maxOSMDDisplays);
 
   for (let i = 0, file = files[i]; i < osmdDisplays; i++) {
-    if (!file.name.match(".*.xml") && !file.name.match(".*.musicxml")) {
+    if (!file.name.match(".*.xml") && !file.name.match(".*.musicxml") && !file.name.match(".*.mxl")) {
       alert("You selected a non-xml file. Please select only music xml files.");
       continue;
     }
@@ -120,7 +120,7 @@ function handleFileSelect(evt) {
         hideCursor();
       });
     };
-    if (file.name.match(".*.mxl")) {
+    if (file.name.match(".*.mxl") || file.name.match(".*.xml")) {
       // have to read as binary, otherwise JSZip will throw ("corrupted zip: missing 37 bytes" or similar)
       reader.readAsBinaryString(file);
     } else {
