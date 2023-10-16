@@ -72,11 +72,12 @@ function handleFileSelect(evt) {
   let osmdDisplays = Math.min(files.length, maxOSMDDisplays);
 
   for (let i = 0, file = files[i]; i < osmdDisplays; i++) {
+    /*
     if (!file.name.match(".*.xml") && !file.name.match(".*.musicxml") && !file.name.match(".*.mxl")) {
       alert("You selected a non-xml file. Please select only music xml files.");
       continue;
     }
-
+    */
     let reader = new FileReader();
 
     reader.onload = function (e) {
