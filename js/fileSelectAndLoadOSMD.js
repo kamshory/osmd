@@ -61,11 +61,11 @@ async function loadMusicFromUrl(xmlUrl, audioUrl) {
     const response = await fetch(xmlUrl);
     const xmlText = await response.text();
     let osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdCanvas", {
-      zoom: 0.5,
+      zoom: 0.4,
       drawFromMeasureNumber: 1,
       drawUpToMeasureNumber: Number.MAX_SAFE_INTEGER,
     });
-    osmd.zoom = 0.5;
+    osmd.zoom = 0.4;
 
     await osmd.load(xmlText);
     window.osmd = osmd;
@@ -82,6 +82,7 @@ async function loadMusicFromUrl(xmlUrl, audioUrl) {
     renderInstrument(document.querySelector("#instruments"), tracks);
     osmd.cursor.reset();
     osmd.cursor.show();
+    alignInstrumentsToStaves(osmd);
 
     pb.play();
     pb.scroll();
@@ -132,6 +133,21 @@ function renderInstrument(element, tracks) {
   element.innerHTML = "";
   element.appendChild(ul);
 }
+
+function alignInstrumentsToStaves(osmd) {
+  if (!osmd || !osmd.cursor || !osmd.cursor.iterator || !osmd.cursor.iterator.currentMeasure) return;
+  const measure = osmd.cursor.iterator.currentMeasure;
+  const verticalMeasureList = measure.verticalMeasureList || [];
+  for (let idx = 0; idx < verticalMeasureList.length; idx++) {
+    const el = document.querySelector(".box-" + idx);
+    if (!el) continue;
+    const stave = verticalMeasureList[idx].stave;
+    if (!stave) continue;
+    const top = stave.y - (osmd.cursor.cursorElement?.offsetTop || 0);
+    el.style.top = top + "px";
+  }
+}
+
 function hideCursor() {
 }
 function handleFileSelect(evt) {
@@ -153,11 +169,11 @@ function handleFileSelect(evt) {
     reader.onload = function (e) {
       let osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdCanvas", {
         // set options here
-        zoom: 0.5,
+        zoom: 0.4,
         drawFromMeasureNumber: 1,
         drawUpToMeasureNumber: Number.MAX_SAFE_INTEGER, // draw all measures, up to the end of the sample
       });
-      osmd.zoom = 0.5;
+      osmd.zoom = 0.4;
 
       osmd.load(e.target.result).then(function () {
         window.osmd = osmd; // give access to osmd object in Browser console, e.g. for osmd.setOptions()
@@ -171,19 +187,7 @@ function handleFileSelect(evt) {
         renderInstrument(document.querySelector("#instruments"), tracks);
         osmd.cursor.reset();
         osmd.cursor.show();
-
-        for (
-          let idx = 0;
-          idx <
-          osmd.cursor.iterator.currentMeasure.verticalMeasureList.length - 1;
-          idx++
-        ) {
-          let top =
-            osmd.cursor.iterator.currentMeasure.verticalMeasureList[idx].stave
-              .y - osmd.cursor.cursorElement.offsetTop;
-          document.querySelector(".box-" + idx).style.top = top + "px";
-        }
-        osmd.cursor.reset();
+        alignInstrumentsToStaves(osmd);
 
         if (!audioPlayer) audioPlayer = document.getElementById("audioPlayer");
         if (audioPlayer) {

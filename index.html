@@ -42,18 +42,13 @@
     
 </body>
 <script>
-    document.onclick = function()
-    {
+    document.onclick = function() {
     }
-    window.onload = function()
-    {
+    window.onload = function() {
         document.getElementById("loadUrlButton").addEventListener("click", function () {
             let xmlUrl = document.getElementById("xmlUrlInput").value.trim();
             let audioUrl = document.getElementById("audioUrlInput").value.trim();
             loadMusicFromUrl(xmlUrl, audioUrl);
-        }, false);
-        document.getElementById("browser").addEventListener("click", function(){
-            document.getElementById("files").click();
         }, false);
     }
 </script>
