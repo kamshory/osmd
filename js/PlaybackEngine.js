@@ -6,10 +6,13 @@ const playbackStates = {
 };
 
 class PlaybackEngine {
-  constructor() {
+  constructor(audioElement) {
     this.ac = new AudioContext();
     this.ac.suspend();
     this.defaultBpm = 100;
+
+    this.audioElement = audioElement || null;
+    this.animationFrameRequest = null;
 
     this.cursor = null;
     this.sheet = null;
@@ -21,6 +24,7 @@ class PlaybackEngine {
 
     this.iterationSteps = 0;
     this.currentIterationStep = 0;
+    this.stepTimestamps = [];
 
     this.timeoutHandles = [];
     this.animateTimeout = {};
@@ -122,9 +126,25 @@ class PlaybackEngine {
       (delay, notes) => this._notePlaybackCallback(delay, notes)
     );
     this._countAndSetIterationSteps();
+    this._generateCursorTimestampMap();
+    if (this.audioElement) {
+      this._bindAudioEvents();
+    }
   }
 
   async play() {
+    if (this.audioElement) {
+      try {
+        await this.audioElement.play();
+      } catch (error) {
+        console.warn("PlaybackEngine: audio playback failed", error);
+      }
+      this._startAudioSync();
+      this.cursor.show();
+      this.state = playbackStates.PLAYING;
+      return;
+    }
+
     if (!this.playbackSettings.instrument) {
       await this.loadInstrument("acoustic_grand_piano");
     }
@@ -137,10 +157,15 @@ class PlaybackEngine {
 
   async stop() {
     this.state = playbackStates.STOPPED;
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement.currentTime = 0;
+      this._stopAudioSync();
+    }
     if (this.playbackSettings.instrument)
       this.playbackSettings.instrument.stop();
     this._clearTimeouts();
-    this.scheduler.reset();
+    if (this.scheduler) this.scheduler.reset();
     this.cursor.reset();
     this.currentIterationStep = 0;
     this.cursor.hide();
@@ -148,18 +173,32 @@ class PlaybackEngine {
 
   pause() {
     this.state = playbackStates.PAUSED;
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this._stopAudioSync();
+      return;
+    }
     this.ac.suspend();
     if (this.playbackSettings.instrument)
       this.playbackSettings.instrument.stop();
-    this.scheduler.setIterationStep(this.currentIterationStep);
-    this.scheduler.pause();
+    if (this.scheduler) this.scheduler.setIterationStep(this.currentIterationStep);
+    if (this.scheduler) this.scheduler.pause();
     this._clearTimeouts();
   }
 
-  resume() {
+  async resume() {
     this.state = playbackStates.PLAYING;
-    this.scheduler.resume();
-    this.ac.resume();
+    if (this.audioElement) {
+      try {
+        await this.audioElement.play();
+      } catch (error) {
+        console.warn("PlaybackEngine: audio resume failed", error);
+      }
+      this._startAudioSync();
+      return;
+    }
+    if (this.scheduler) this.scheduler.resume();
+    await this.ac.resume();
   }
 
   jumpToStep(step) {
@@ -173,13 +212,15 @@ class PlaybackEngine {
       this.cursor.next();
       ++this.currentIterationStep;
     }
-    let schedulerStep = this.currentIterationStep;
-    if (
-      this.currentIterationStep > 0 &&
-      this.currentIterationStep < this.iterationSteps
-    )
-      ++schedulerStep;
-    this.scheduler.setIterationStep(schedulerStep);
+    if (this.scheduler) {
+      let schedulerStep = this.currentIterationStep;
+      if (
+        this.currentIterationStep > 0 &&
+        this.currentIterationStep < this.iterationSteps
+      )
+        ++schedulerStep;
+      this.scheduler.setIterationStep(schedulerStep);
+    }
     this.cursor.show();
   }
 
@@ -246,6 +287,128 @@ class PlaybackEngine {
     if (this.scheduler) this.scheduler.wholeNoteLength = this.wholeNoteLength;
   }
 
+  attachAudio(audioElement) {
+    this.audioElement = audioElement;
+    if (this.audioElement) {
+      this._bindAudioEvents();
+      this.syncToAudioTimeMs(this.audioElement.currentTime * 1000);
+    }
+  }
+
+  _bindAudioEvents() {
+    if (!this.audioElement) return;
+    this.audioElement.addEventListener("play", () => this._startAudioSync());
+    this.audioElement.addEventListener("pause", () => this._stopAudioSync());
+    this.audioElement.addEventListener("seeked", () =>
+      this.syncToAudioTimeMs(this.audioElement.currentTime * 1000)
+    );
+    this.audioElement.addEventListener("timeupdate", () =>
+      this.syncToAudioTimeMs(this.audioElement.currentTime * 1000)
+    );
+    this.audioElement.addEventListener("ended", () => this.stop());
+  }
+
+  _startAudioSync() {
+    if (!this.audioElement) return;
+    if (this.animationFrameRequest) return;
+    const syncFrame = () => {
+      if (!this.audioElement || this.audioElement.paused) {
+        this.animationFrameRequest = null;
+        return;
+      }
+      this.syncToAudioTimeMs(this.audioElement.currentTime * 1000);
+      this.animationFrameRequest = requestAnimationFrame(syncFrame);
+    };
+    this.animationFrameRequest = requestAnimationFrame(syncFrame);
+  }
+
+  _stopAudioSync() {
+    if (this.animationFrameRequest) {
+      cancelAnimationFrame(this.animationFrameRequest);
+      this.animationFrameRequest = null;
+    }
+  }
+
+  _generateCursorTimestampMap() {
+    this.stepTimestamps = [];
+    if (!this.cursor || !this.cursor.iterator) return;
+
+    this.cursor.reset();
+    while (!this.cursor.iterator.endReached) {
+      const timestamp = this.cursor.iterator.CurrentSourceTimestamp;
+      let realValue = 0;
+      if (timestamp && typeof timestamp.RealValue === "number") {
+        realValue = timestamp.RealValue;
+      } else if (this.cursor.iterator.currentTimeStamp) {
+        realValue = this.cursor.iterator.currentTimeStamp.RealValue || 0;
+      }
+      this.stepTimestamps.push(realValue * this.wholeNoteLength);
+      this.cursor.next();
+    }
+    this.cursor.reset();
+  }
+
+  syncToAudioTimeMs(timeMs) {
+    if (this.stepTimestamps && this.stepTimestamps.length > 1) {
+      const hasRealTimestamps = this.stepTimestamps.some((value) => value > 0);
+      if (hasRealTimestamps) {
+        const targetIndex = this._findCursorIndexForTime(timeMs);
+        if (targetIndex !== -1) {
+          this._seekCursorToStep(targetIndex);
+          osmd.cursor.update();
+          return;
+        }
+      }
+    }
+
+    if (this.audioElement && this.audioElement.duration > 0 && this.iterationSteps > 0) {
+      const ratio = Math.min(1, Math.max(0, this.audioElement.currentTime / this.audioElement.duration));
+      const targetIndex = Math.floor(ratio * (this.iterationSteps - 1));
+      this._seekCursorToStep(targetIndex);
+      osmd.cursor.update();
+    }
+
+    
+    
+  }
+
+  _findCursorIndexForTime(timeMs) {
+    let low = 0;
+    let high = this.stepTimestamps.length - 1;
+    let result = 0;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const value = this.stepTimestamps[mid];
+      if (value <= timeMs) {
+        result = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return result;
+  }
+
+  _seekCursorToStep(targetStep) {
+    if (!this.cursor) return;
+    targetStep = Math.max(0, Math.min(targetStep, this.iterationSteps - 1));
+    if (targetStep === this.currentIterationStep) return;
+    this.cursor.hide();
+    if (targetStep < this.currentIterationStep) {
+      this.cursor.reset();
+      this.currentIterationStep = 0;
+    }
+    while (this.currentIterationStep < targetStep && !this.cursor.iterator.endReached) {
+      this.cursor.next();
+      ++this.currentIterationStep;
+    }
+    this.cursor.show();
+    if (typeof this.cursor.update === "function") {
+      this.cursor.update();
+    }
+    this.scroll();
+  }
+
   _countAndSetIterationSteps() {
     this.cursor.reset();
     let steps = 0;
@@ -262,6 +425,8 @@ class PlaybackEngine {
 
   _notePlaybackCallback(audioDelay, notes) {
     if (this.state !== playbackStates.PLAYING) return;
+    if (this.audioElement) return;
+    if (!this.playbackSettings.instrument) return;
 
     //console.log(notes);
 

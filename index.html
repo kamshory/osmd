@@ -14,11 +14,17 @@
  </head>
 <body>
     <div id="fileloader">
-        <div id="browser" class="folder-container">
-            <div class="folder-tab"></div>
-            <div class="folder"></div>
-          </div>
-        <input type="file" id="files" style="position: absolute; left: -100000000px;"/>
+
+        <div id="url-loader" style="margin-top:12px;">
+            <input id="xmlUrlInput" type="text" placeholder="Lagu 0065.xml" value="Lagu 0065.xml" style="width:260px;margin-bottom:6px;display:block;" />
+            <input id="audioUrlInput" type="text" placeholder="Lagu 0065.mp3" value="Lagu 0065.mp3" style="width:260px;margin-bottom:8px;display:block;" />
+            <button id="loadUrlButton" style="display:inline-block;padding:6px 12px;">Load from URL</button>
+        </div>
+
+    </div>
+
+    <div id="audio-container" style="padding: 12px; display: none;">
+        <audio id="audioPlayer" controls preload="metadata" style="display:block;width:100%;"></audio>
     </div>
 
     <div id="container">
@@ -41,7 +47,11 @@
     }
     window.onload = function()
     {
-        document.getElementById("files").addEventListener("change", handleFileSelect, false);
+        document.getElementById("loadUrlButton").addEventListener("click", function () {
+            let xmlUrl = document.getElementById("xmlUrlInput").value.trim();
+            let audioUrl = document.getElementById("audioUrlInput").value.trim();
+            loadMusicFromUrl(xmlUrl, audioUrl);
+        }, false);
         document.getElementById("browser").addEventListener("click", function(){
             document.getElementById("files").click();
         }, false);
