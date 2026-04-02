@@ -3,6 +3,69 @@ body {
     padding: 0;
 }
 
+#audio-container {
+    display: none;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    background: #111;
+    color: #f1f1f1;
+    font-family: system-ui, sans-serif;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#audioPlayer {
+    display: none;
+}
+
+.audio-player-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.audio-btn {
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.audio-progress {
+    flex: 1;
+    min-width: 80px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.audio-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #4fc3f7;
+    transition: width 0.1s linear;
+}
+
+.audio-time {
+    min-width: 72px;
+    font-size: 11px;
+    color: #ccc;
+}
+
+.audio-volume {
+    width: 60px;
+    accent-color: #4fc3f7;
+    height: 18px;
+}
+
 #container {
     height: 100vh;
     position: relative;

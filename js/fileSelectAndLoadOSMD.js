@@ -1,6 +1,90 @@
 let pb = null;
 let audioPlayer = null;
 
+function initAudioPlayerUI() {
+  if (!audioPlayer) audioPlayer = document.getElementById("audioPlayer");
+  const playButton = document.getElementById("audioPlayPause");
+  const muteButton = document.getElementById("audioMute");
+  const volumeSlider = document.getElementById("audioVolume");
+  const progressBar = document.getElementById("audioProgressBar");
+  const progressFill = document.getElementById("audioProgress");
+  const timeLabel = document.getElementById("audioTime");
+  const audioWrapper = document.getElementById("audio-container");
+  if (!audioPlayer || !playButton || !muteButton || !volumeSlider || !progressBar || !progressFill || !timeLabel || !audioWrapper) return;
+
+  audioPlayer.controls = false;
+
+  const updateVolumeUI = () => {
+    volumeSlider.value = String(audioPlayer.volume);
+    muteButton.textContent = audioPlayer.muted || audioPlayer.volume === 0 ? "🔇" : "🔊";
+  };
+
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds) || seconds < 0) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const updateAudioTimeUI = () => {
+    const current = audioPlayer.currentTime || 0;
+    const duration = audioPlayer.duration || 0;
+    timeLabel.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+    if (duration > 0) {
+      const pct = Math.min(100, Math.max(0, (current / duration) * 100));
+      progressFill.style.width = `${pct}%`;
+    } else {
+      progressFill.style.width = "0%";
+    }
+  };
+
+  const updatePlayButton = () => {
+    playButton.textContent = audioPlayer.paused || audioPlayer.ended ? "▶" : "❚❚";
+  };
+
+  playButton.addEventListener("click", () => {
+    if (audioPlayer.paused || audioPlayer.ended) {
+      audioPlayer.play();
+    } else {
+      audioPlayer.pause();
+    }
+  });
+
+  muteButton.addEventListener("click", () => {
+    audioPlayer.muted = !audioPlayer.muted;
+    updateVolumeUI();
+  });
+
+  volumeSlider.addEventListener("input", (event) => {
+    audioPlayer.volume = Number(event.target.value);
+    audioPlayer.muted = audioPlayer.volume === 0;
+    updateVolumeUI();
+  });
+
+  const seekAudio = (event) => {
+    if (!audioPlayer.duration) return;
+    const rect = progressBar.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const pct = Math.min(1, Math.max(0, x / rect.width));
+    audioPlayer.currentTime = pct * audioPlayer.duration;
+    updateAudioTimeUI();
+  };
+
+  progressBar.addEventListener("click", seekAudio);
+
+  audioPlayer.addEventListener("loadedmetadata", updateAudioTimeUI);
+  audioPlayer.addEventListener("timeupdate", updateAudioTimeUI);
+  audioPlayer.addEventListener("play", updatePlayButton);
+  audioPlayer.addEventListener("pause", updatePlayButton);
+  audioPlayer.addEventListener("ended", () => {
+    updatePlayButton();
+    updateAudioTimeUI();
+  });
+
+  updateVolumeUI();
+  updatePlayButton();
+}
+
 function instrumentMap(instruments) {
   let tracks = [];
   for (let instrument of instruments) {

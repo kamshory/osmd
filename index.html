@@ -23,8 +23,17 @@
 
     </div>
 
-    <div id="audio-container" style="padding: 12px; display: none;">
-        <audio id="audioPlayer" controls preload="metadata" style="display:block;width:100%;"></audio>
+    <div id="audio-container" style="display: none;">
+        <audio id="audioPlayer" preload="metadata"></audio>
+        <div class="audio-player-controls">
+            <button id="audioPlayPause" class="audio-btn" type="button">▶</button>
+            <div id="audioProgressBar" class="audio-progress" aria-label="Audio progress">
+                <div id="audioProgress" class="audio-progress-fill"></div>
+            </div>
+            <span id="audioTime" class="audio-time">00:00 / 00:00</span>
+            <button id="audioMute" class="audio-btn" type="button">🔊</button>
+            <input id="audioVolume" class="audio-volume" type="range" min="0" max="1" step="0.05" value="1" />
+        </div>
     </div>
 
     <div id="container">
@@ -45,6 +54,9 @@
     document.onclick = function() {
     }
     window.onload = function() {
+        if (typeof initAudioPlayerUI === "function") {
+            initAudioPlayerUI();
+        }
         document.getElementById("loadUrlButton").addEventListener("click", function () {
             let xmlUrl = document.getElementById("xmlUrlInput").value.trim();
             let audioUrl = document.getElementById("audioUrlInput").value.trim();
