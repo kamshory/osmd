@@ -143,8 +143,14 @@ function alignInstrumentsToStaves(osmd) {
     if (!el) continue;
     const stave = verticalMeasureList[idx].stave;
     if (!stave) continue;
-    const top = stave.y - (osmd.cursor.cursorElement?.offsetTop || 0);
-    el.style.top = top + "px";
+    const targetTop = stave.y - (osmd.cursor.cursorElement?.offsetTop || 0);
+    if (Number.isNaN(targetTop)) continue;
+    const currentTop = parseFloat(window.getComputedStyle(el).top) || 0;
+    const delta = targetTop - currentTop;
+    if (Math.abs(delta) < 1) continue;
+    const maxDelta = 16;
+    const nextTop = Math.abs(delta) > maxDelta ? currentTop + Math.sign(delta) * maxDelta : targetTop;
+    el.style.top = nextTop + "px";
   }
 }
 

@@ -406,6 +406,9 @@ class PlaybackEngine {
     if (typeof this.cursor.update === "function") {
       this.cursor.update();
     }
+    if (typeof alignInstrumentsToStaves === "function" && typeof window !== "undefined" && window.osmd) {
+      alignInstrumentsToStaves(window.osmd);
+    }
     this.scroll();
   }
 

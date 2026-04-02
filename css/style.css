@@ -50,7 +50,9 @@ body {
 
 #instruments .elem-ul .elem-li.instr {
     position: absolute;
-    transition: top ease-in-out 0.24s;
+    transition: top 0.16s ease-out;
+    will-change: top;
+    margin-top: -32px;
 }
 
 #instruments .elem-ul .elem-li .instrument-container {
@@ -62,7 +64,6 @@ body {
 }
 
 #instruments .elem-ul .elem-li img {
-    transition: all ease-in-out 0.05s;
     max-width: 100%;
     max-height: 100%;
 }
