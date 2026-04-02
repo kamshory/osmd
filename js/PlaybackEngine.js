@@ -350,41 +350,21 @@ class PlaybackEngine {
 
   syncToAudioTimeMs(timeMs) {
     if(timeMs >= 0 && timeMs < this.timeMs) {
-      console.log("Rewinding to", timeMs, "ms");
-      
       osmd.cursor.reset();
+      this.cursor = osmd.cursor;
     }
     this.timeMs = timeMs;
     if (this.stepTimestamps && this.stepTimestamps.length > 1) {
-      console.log("BAGIAN 1");
       const hasRealTimestamps = this.stepTimestamps.some((value) => value > 0);
       if (hasRealTimestamps) {
-        console.log("BAGIAN 2");
         const targetIndex = this._findCursorIndexForTime(timeMs);
         if (targetIndex !== -1) {
-          console.log("BAGIAN 3");
           this._seekCursorToStep(targetIndex);
           osmd.cursor.update();
           this.timeMs = timeMs;
           return;
         }
-        console.log("BAGIAN 4");
-      } else {
-        console.log("BAGIAN 5");
       }
-    }
-
-    if(this.audioElement)
-    {
-      console.log("BAGIAN 6");
-    }
-    if(this.audioElement.duration > 0)
-    {
-      console.log("BAGIAN 7");
-    }
-    if(this.iterationSteps > 0)
-    {
-      console.log("BAGIAN 8");
     }
 
     if (this.audioElement && this.audioElement.duration > 0 && this.iterationSteps > 0) {
@@ -393,12 +373,6 @@ class PlaybackEngine {
       this._seekCursorToStep(targetIndex);
       osmd.cursor.update();
     }
-    else {
-      console.warn("PlaybackEngine: Unable to sync to audio time - missing timestamps or audio metadata");
-    }
-
-    
-    
   }
 
   _findCursorIndexForTime(timeMs) {
@@ -459,8 +433,6 @@ class PlaybackEngine {
     if (this.state !== playbackStates.PLAYING) return;
     if (this.audioElement) return;
     if (!this.playbackSettings.instrument) return;
-
-    //console.log(notes);
 
     let scheduledNotes = [];
 
