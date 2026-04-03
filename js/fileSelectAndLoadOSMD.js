@@ -123,10 +123,6 @@ function handleAudioFileSelect(evt) {
 
 async function loadMusicFromUrl(xmlUrl, audioUrl) {
   if (!xmlUrl) return;
-  let loader = document.querySelector("#fileloader");
-  let container = document.querySelector("#container");
-  if (loader) loader.style.display = "none";
-  if (container) container.style.display = "block";
 
   if (!audioPlayer) audioPlayer = document.getElementById("audioPlayer");
   if (audioUrl && audioPlayer) {
@@ -144,37 +140,162 @@ async function loadMusicFromUrl(xmlUrl, audioUrl) {
   try {
     const response = await fetch(xmlUrl);
     const xmlText = await response.text();
-    let osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdCanvas", {
-      zoom: 0.4,
-      drawFromMeasureNumber: 1,
-      drawUpToMeasureNumber: Number.MAX_SAFE_INTEGER,
-    });
+    /*
+    if (!window.osmd) {
+      window.osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdCanvas", {
+        zoom: 0.4,
+        drawFromMeasureNumber: 1,
+        drawUpToMeasureNumber: Number.MAX_SAFE_INTEGER,
+      });
+    }
+    const osmd = window.osmd;
     osmd.zoom = 0.4;
 
     await osmd.load(xmlText);
-    window.osmd = osmd;
-    osmd.render();
 
-    pb = new PlaybackEngine();
-    pb.loadScore(osmd);
-    pb.setBpm(osmd.sheet.DefaultStartTempoInBpm);
-    if (audioPlayer) {
-      pb.attachAudio(audioPlayer);
-    }
-
-    let tracks = pb.getInstrumentMap(osmd.sheet.instruments);
-    renderInstrument(document.querySelector("#instruments"), tracks);
-    osmd.cursor.reset();
-    osmd.cursor.show();
-    alignInstrumentsToStaves(osmd);
-
-    pb.play();
-    pb.scroll();
-    hideCursor();
+    
+    */
+    displayStaffSelection(xmlText, audioUrl);
+    
   } catch (error) {
     console.error("Failed to load score from URL", error);
     alert("Gagal memuat skor XML dari URL. Periksa URL dan CORS.");
   }
+}
+
+/**
+ * Manually parses part names from MusicXML content without using OSMD.
+ * @param {string} xmlText - The MusicXML string content.
+ * @returns {Array<{name: string, index: number}>}
+ */
+function parseInstrumentsFromXml(xmlText) {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+  const scoreParts = xmlDoc.querySelectorAll("score-part");
+  return Array.from(scoreParts).map((part, index) => ({
+    name: part.querySelector("part-name")?.textContent || `Staf ${index + 1}`,
+    index: index
+  }));
+}
+
+function displayStaffSelection(xmlText, audioUrl) {
+  const instruments = parseInstrumentsFromXml(xmlText);
+  const selectionContainer = document.getElementById("staff-selection-container");
+  const checkboxesDiv = document.getElementById("staff-checkboxes");
+  const renderButton = document.getElementById("renderButton");
+
+  if (!selectionContainer || !checkboxesDiv || !renderButton) return;
+
+  checkboxesDiv.innerHTML = "";
+  selectionContainer.style.display = "block";
+
+  // const instruments = window.osmd.sheet.Instruments;
+
+  // Tambahkan Checkbox "Pilih Semua"
+  const selectAllDiv = document.createElement("div");
+  const selectAllCb = document.createElement("input");
+  selectAllCb.type = "checkbox";
+  selectAllCb.id = "selectAllStaves";
+  selectAllCb.checked = true;
+  const selectAllLabel = document.createElement("label");
+  selectAllLabel.htmlFor = "selectAllStaves";
+  selectAllLabel.textContent = " Pilih Semua";
+  selectAllDiv.appendChild(selectAllCb);
+  selectAllDiv.appendChild(selectAllLabel);
+  checkboxesDiv.appendChild(selectAllDiv);
+  checkboxesDiv.appendChild(document.createElement("hr"));
+
+  const staffCheckboxes = [];
+  instruments.forEach((instr, index) => {
+    const div = document.createElement("div");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "staff-checkbox";
+    cb.id = "staff-cb-" + index;
+    cb.value = index;
+    cb.checked = true;
+    staffCheckboxes.push(cb);
+
+    const label = document.createElement("label");
+    label.htmlFor = "staff-cb-" + index;
+    label.textContent = " " + (instr.Name || `Staf ${index + 1}`);
+
+    div.appendChild(cb);
+    div.appendChild(label);
+    checkboxesDiv.appendChild(div);
+  });
+
+  selectAllCb.addEventListener("change", (e) => {
+    staffCheckboxes.forEach(cb => cb.checked = e.target.checked);
+  });
+
+  renderButton.onclick = async () => {
+    const selectedIndices = staffCheckboxes
+      .filter(cb => cb.checked)
+      .map(cb => parseInt(cb.value));
+
+    if (selectedIndices.length === 0) {
+      alert("Silakan pilih minimal satu staf untuk dirender.");
+      return;
+    }
+
+    if (!window.osmd) {
+      window.osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdCanvas", {
+        zoom: 0.4,
+        drawFromMeasureNumber: 1,
+        drawUpToMeasureNumber: Number.MAX_SAFE_INTEGER,
+      });
+    }
+    const osmd = window.osmd;
+    osmd.zoom = 0.4;
+
+    await osmd.load(xmlText);
+
+    finalizeRender(selectedIndices, audioUrl);
+    selectionContainer.style.display = "none";
+  };
+}
+
+function finalizeRender(selectedIndices, audioUrl) {
+  const osmd = window.osmd;
+  let loader = document.querySelector("#fileloader");
+  let container = document.querySelector("#container");
+  if (loader) loader.style.display = "none";
+  if (container) container.style.display = "block";
+
+  // Atur visibilitas instrumen berdasarkan pilihan
+  osmd.sheet.Instruments.forEach((instr, index) => {
+    instr.Visible = selectedIndices.includes(index);
+  });
+
+  osmd.render();
+
+  if (pb) pb.stop();
+  pb = new PlaybackEngine();
+  pb.loadScore(osmd);
+  pb.setBpm(osmd.sheet.DefaultStartTempoInBpm);
+
+  if (!audioPlayer) audioPlayer = document.getElementById("audioPlayer");
+  if (audioUrl && audioPlayer) {
+    audioPlayer.src = audioUrl;
+    audioPlayer.load();
+    let audioWrapper = document.getElementById("audio-container");
+    if (audioWrapper) audioWrapper.style.display = "block";
+  }
+
+  if (audioPlayer) {
+    pb.attachAudio(audioPlayer);
+  }
+
+  let tracks = pb.getInstrumentMap(osmd.sheet.Instruments.filter(i => i.Visible));
+  renderInstrument(document.querySelector("#instruments"), tracks);
+  osmd.cursor.reset();
+  osmd.cursor.show();
+  alignInstrumentsToStaves(osmd);
+
+  // Play tidak dipanggil otomatis, dilakukan manual oleh user
+  pb.scroll();
+  hideCursor();
 }
 
 function renderInstrument(element, tracks) {

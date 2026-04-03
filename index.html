@@ -4,25 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XMLMusic Player</title>
-    <script src="js/soundfont-player.js"></script>
     <script src="js/PlaybackEngine.js"></script>
     <script src="js/PlaybackScheduler.js"></script>
     <script src="js/StepQueue.js"></script>
     <script src="js/opensheetmusicdisplay.min.js"></script> <!-- you need to provide the .js file, see README.md-->
     <script src="js/fileSelectAndLoadOSMD.js"></script>
     <link rel="stylesheet" href="css/style.css">
- </head>
+</head>
 <body>
-    <div id="fileloader">
-
-        <div id="url-loader" style="margin-top:12px;">
-            <input id="xmlUrlInput" type="text" placeholder="Lagu 0065.xml" value="Lagu 0065.xml" style="width:260px;margin-bottom:6px;display:block;" />
-            <input id="audioUrlInput" type="text" placeholder="Lagu 0065.mp3" value="Lagu 0065.mp3" style="width:260px;margin-bottom:8px;display:block;" />
-            <button id="loadUrlButton" style="display:inline-block;padding:6px 12px;">Load from URL</button>
-        </div>
-
-    </div>
-
     <div id="audio-container" style="display: none;">
         <audio id="audioPlayer" preload="metadata"></audio>
         <div class="audio-player-controls">
@@ -35,6 +24,24 @@
             <input id="audioVolume" class="audio-volume" type="range" min="0" max="1" step="0.05" value="1" />
         </div>
     </div>
+    <div id="fileloader">
+
+        <div id="url-loader" style="margin-top:12px;">
+            <input id="xmlUrlInput" type="text" placeholder="Lagu 0065.xml" value="Lagu 0065.xml" style="width:260px;margin-bottom:6px;display:block;" />
+            <input id="audioUrlInput" type="text" placeholder="Lagu 0065.mp3" value="Lagu 0065.mp3" style="width:260px;margin-bottom:8px;display:block;" />
+            <button id="loadUrlButton" style="display:inline-block;padding:6px 12px;">Load from URL</button>
+        </div>
+
+        <div id="staff-selection-container" style="display:none; margin-top:12px; border-top: 1px solid #ccc; padding-top: 10px;">
+            <h3 style="margin-top:0;">Pilih Staf untuk Dirender:</h3>
+            <div id="staff-checkboxes" style="margin-bottom: 10px; max-height: 200px; overflow-y: auto; text-align: left; display: inline-block;"></div>
+            <br/>
+            <button id="renderButton" style="padding:6px 12px;">Render Partitur</button>
+        </div>
+
+    </div>
+
+    
 
     <div id="container">
         <div id="sidebar">
@@ -60,6 +67,10 @@
         document.getElementById("loadUrlButton").addEventListener("click", function () {
             let xmlUrl = document.getElementById("xmlUrlInput").value.trim();
             let audioUrl = document.getElementById("audioUrlInput").value.trim();
+            if (!xmlUrl) {
+                alert("Silakan masukkan URL file XML.");
+                return;
+            }
             loadMusicFromUrl(xmlUrl, audioUrl);
         }, false);
     }
