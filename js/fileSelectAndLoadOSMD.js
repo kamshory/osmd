@@ -341,21 +341,53 @@ function renderInstrument(element, tracks) {
 
 function alignInstrumentsToStaves(osmd) {
   if (!osmd || !osmd.cursor || !osmd.cursor.iterator || !osmd.cursor.iterator.currentMeasure) return;
+
   const measure = osmd.cursor.iterator.currentMeasure;
   const verticalMeasureList = measure.verticalMeasureList || [];
+
+  const container = document.getElementById("osmdCanvas");
+  if (!container) return;
+
+  const containerRect = container.getBoundingClientRect();
+
+  let scrollPos = container.scrollTop;
+
   for (let idx = 0; idx < verticalMeasureList.length; idx++) {
     const el = document.querySelector(".box-" + idx);
     if (!el) continue;
+
     const stave = verticalMeasureList[idx].stave;
     if (!stave) continue;
-    const targetTop = stave.y - (osmd.cursor.cursorElement?.offsetTop || 0);
+
+    const targetTop = stave.y - scrollPos; //containerRect.top;
+    //console.log(`Stave ${idx}: stave.y=${stave.y}, containerRect.top=${containerRect.top}, targetTop=${targetTop}`);
     if (Number.isNaN(targetTop)) continue;
-    const currentTop = parseFloat(window.getComputedStyle(el).top) || 0;
-    const delta = targetTop - currentTop;
-    if (Math.abs(delta) < 1) continue;
-    const maxDelta = 16;
-    const nextTop = Math.abs(delta) > maxDelta ? currentTop + Math.sign(delta) * maxDelta : targetTop;
-    el.style.top = nextTop + "px";
+
+    let attrTop = el.dataset.top;
+
+    if (typeof attrTop === "undefined") {
+      attrTop = el.offsetTop;
+      el.dataset.top = attrTop;
+    }
+
+    let currentTop = parseFloat(attrTop);
+
+    let delta = targetTop - currentTop;
+    //console.log(`Aligning instrument ${idx}: currentTop=${currentTop}, targetTop=${targetTop}, delta=${delta}`);
+
+    if (Math.abs(delta) < 1 || Math.abs(delta) > 400) continue;
+
+    /*
+    const maxDelta = 20;
+
+    if (Math.abs(delta) > maxDelta) {
+      delta = Math.sign(delta) * maxDelta;
+    }
+    */
+    el.style.transform = `translateY(${delta}px)`;
+    if(el.dataset.top == 'undefined') {
+      el.dataset.top = currentTop;
+    }
   }
 }
 
