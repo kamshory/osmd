@@ -115,7 +115,7 @@ body {
     position: absolute;
     transition: top 0.16s ease-out;
     will-change: top;
-    margin-top: -104px;
+    margin-top: -32px;
 }
 
 #instruments .elem-ul .elem-li .instrument-container {

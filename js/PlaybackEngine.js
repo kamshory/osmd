@@ -246,6 +246,19 @@ class PlaybackEngine {
       */
       let cls2 = ".instr-" + subInstrument.idString;
       this.animateInstr(cls2, subInstrument.volume, noteDuration);
+
+      for (
+        let idx = 0;
+        idx <
+        osmd.cursor.iterator.currentMeasure.verticalMeasureList.length - 1;
+        idx++
+      ) {
+        let top =
+          osmd.cursor.iterator.currentMeasure.verticalMeasureList[idx].stave.y -
+          osmd.cursor.cursorElement.offsetTop;
+        let cls = ".box-" + idx;
+        document.querySelector(cls).style.top = top + "px";
+      }
     }
   }
 
@@ -396,10 +409,10 @@ class PlaybackEngine {
     if (typeof this.cursor.update === "function") {
       this.cursor.update();
     }
-    this.scroll();
     if (typeof alignInstrumentsToStaves === "function" && typeof window !== "undefined" && window.osmd) {
       alignInstrumentsToStaves(window.osmd);
     }
+    this.scroll();
   }
 
   _countAndSetIterationSteps() {
@@ -464,9 +477,6 @@ class PlaybackEngine {
     if (this.currentIterationStep > 0) {
       osmd.cursor.next();
       this.scroll();
-      if (typeof alignInstrumentsToStaves === "function" && typeof window !== "undefined" && window.osmd) {
-        alignInstrumentsToStaves(window.osmd);
-      }
     }
     ++this.currentIterationStep;
   }
